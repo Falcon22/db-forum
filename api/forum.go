@@ -3,10 +3,8 @@ package api
 import (
 	"db-forum/database"
 	"db-forum/models"
-	"encoding/json"
 	"log"
 	"net/http"
-
 	"strconv"
 
 	"github.com/valyala/fasthttp"
@@ -16,10 +14,10 @@ import (
 func CreateForum(ctx *fasthttp.RequestCtx) {
 	var forum models.Forum
 	body := ctx.PostBody()
-	if err := json.Unmarshal(body, &forum); err != nil {
-
+	if err := forum.UnmarshalJSON(body); err != nil {
+		WriteResponse(ctx, http.StatusBadRequest, models.Error{err.Error()})
+		return
 	}
-	log.Println(forum)
 	forumAuthor, err := database.GetUserByUsername(forum.User)
 	if err != nil {
 		if err == database.ErrNotFound {

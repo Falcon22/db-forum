@@ -3,7 +3,6 @@ package api
 import (
 	"db-forum/database"
 	"db-forum/models"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -15,8 +14,7 @@ import (
 
 func CreateThread(ctx *fasthttp.RequestCtx, forumName string) {
 	var thread models.Thread
-	body := ctx.PostBody()
-	if err := json.Unmarshal(body, &thread); err != nil {
+	if err := thread.UnmarshalJSON(ctx.PostBody()); err != nil {
 		log.Println(err.Error())
 		WriteResponse(ctx, http.StatusInternalServerError, models.Error{err.Error()})
 		return
@@ -138,7 +136,7 @@ func UpdateThread(ctx *fasthttp.RequestCtx) {
 	body := ctx.PostBody()
 	var thread *models.Thread
 	var postThread models.Thread
-	if err := json.Unmarshal(body, &postThread); err != nil {
+	if err := postThread.UnmarshalJSON(body); err != nil {
 		WriteResponse(ctx, http.StatusBadRequest, models.Error{err.Error()})
 		return
 	}
@@ -169,8 +167,7 @@ func VoteThread(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	body := ctx.PostBody()
 	var voice models.Vote
-	if err := json.Unmarshal(body, &voice); err != nil {
-		log.Println(err.Error())
+	if err := voice.UnmarshalJSON(body); err != nil {
 		WriteResponse(ctx, http.StatusBadRequest, models.Error{err.Error()})
 		return
 	}

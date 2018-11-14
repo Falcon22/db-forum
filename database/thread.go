@@ -94,28 +94,28 @@ func GetThread(id string, slug string) (*models.Thread, error) {
 }
 
 var getPrevVote = `SELECT id, nickname, vote, thread_id FROM voice WHERE nickname = $1 AND thread_id = $2 ORDER BY created_at DESC LIMIT 1;`
-var createVoteThread = `INSERT INTO voice (nickname, vote, prev_vote, thread_id) VALUES ($1, $2, $3, $4) RETURNING id;`
+var createVoteThread = `INSERT INTO voice (nickname, vote, thread_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;`
+var updateVoteByID = `UPDATE voice SET prev_vote = vote, vote = $1 WHERE thread_id = $2 AND nickname = $3 RETURNING (vote - prev_vote);`
 var updateVoteThread = `UPDATE thread SET votes = votes + $1 WHERE id = $2 RETURNING votes;`
 
 func VoteThread(vote *models.Vote) (newVote int32, err error) {
-	var nVote, prevVote models.Vote
 	tx, err := db.pg.Begin()
 	if err != nil {
 		return 0, errors.Wrap(err, "can't start tx")
 	}
-	if err := db.GetPrevVoteThreadStmt.QueryRow(vote.Nickname, vote.ThreadId).Scan(&prevVote.ID, &prevVote.Nickname, &prevVote.Voice, &prevVote.ThreadId); err != nil {
+	var diff int32
+	if err := db.pg.QueryRow(updateVoteByID, vote.Voice, vote.Voice, vote.Nickname).Scan(&diff); err != nil {
 		if err != sql.ErrNoRows {
 			tx.Rollback()
-			return 0, errors.Wrap(err, "can't select from voice")
+			return 0, errors.Wrap(err, "can't update voice")
 		}
-		prevVote.ID = 0
-		prevVote.Voice = 0
+		if _, err := db.CreatVoteThreadStmt.Exec(vote.Nickname, vote.Voice, vote.ThreadId); err != nil {
+			tx.Rollback()
+			return 0, errors.Wrap(err, "can't insert into voice")
+		}
+		diff = vote.Voice
 	}
-	if err := db.CreatVoteThreadStmt.QueryRow(vote.Nickname, vote.Voice, prevVote.ID, vote.ThreadId).Scan(&nVote.ID); err != nil {
-		tx.Rollback()
-		return 0, errors.Wrap(err, "can't insert into voice")
-	}
-	if err := db.UpdateVoteThreadStmt.QueryRow(vote.Voice-prevVote.Voice, vote.ThreadId).Scan(&newVote); err != nil {
+	if err := db.UpdateVoteThreadStmt.QueryRow(diff, vote.ThreadId).Scan(&newVote); err != nil {
 		tx.Rollback()
 		return 0, errors.Wrap(err, "can't update thread")
 	}

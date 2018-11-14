@@ -61,7 +61,7 @@
   ]
   pruneopts = "UT"
   revision = "c701774f4e604d952e4e8c56dee260be696e33c3"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:ac4b35a4bba11edb2110fca0707bae03ae92fbd8222e6b483465d98efaabfb97"
@@ -77,7 +77,7 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "ef5f0afec364d3b9396b7b77b43dbe26bf1f8004"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:81210e0af657a0fb3638932ec68e645236bceefa4c839823db0c4d918f080895"
@@ -85,7 +85,7 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "8483a886a90412cd6858df4ea3483dce9c8e35a3"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:a20e8bf0e58e2010677432ffbe5533c1e83bdf368ba5b057f3e00e2071ca8b09"
@@ -93,7 +93,7 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "150d36912387ec2f607be674c5be309ddccc0eed"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:a775057cc1f2ab11da5dc5324f4a5932c14f64e402fa5a48f1b96b5f4c9b579f"
@@ -110,7 +110,7 @@
   ]
   pruneopts = "UT"
   revision = "231d7876b7019dbcbfc97a7ba764379497b67c1d"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:394fed5c0425fe01da3a34078adaa1682e4deaea6e5d232dde25c4034004c151"
@@ -118,7 +118,7 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "5bae59e25b21498baea7f9d46e9c147ec106a42e"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:a4235bc1ae951c708bbf46cee7874ebb88e664614a98a7403fb115bb400c231c"
@@ -134,7 +134,7 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "5899d5c5e619fda5fa86e14795a835f473ca284c"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:58541fddf3f4ec485710f1b346e7f647baf09a878a604e47e3668c600fe44076"
@@ -142,7 +142,7 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "d2eab7d93009e9215fc85b2faa2c2f2a98c2af48"
-  version = "v0.17.0"
+  version = "v0.17.2"
 
 [[projects]]
   digest = "1:a2cff208d4759f6ba1b1cd228587b0a1869f95f22542ec9cd17fff64430113c7"
@@ -185,9 +185,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:84a5a2b67486d5d67060ac393aa255d05d24ed5ee41daecd5635ec22657b6492"
+  digest = "1:aa3d8d42865c42626b5c1add193692d045b3188b1479f0a0a88690d21fe20083"
   name = "github.com/mailru/easyjson"
   packages = [
+    ".",
     "buffer",
     "jlexer",
     "jwriter",
@@ -240,7 +241,7 @@
     "netutil",
   ]
   pruneopts = "UT"
-  revision = "49bb7cea24b1df9410e1712aa6433dae904ff66a"
+  revision = "c44066c5c816ec500d459a2a324a753f78531ae0"
 
 [[projects]]
   digest = "1:0c56024909189aee3364b7f21a95a27459f718aa7c199a5c111c36cfffd9eaef"
@@ -300,6 +301,9 @@
     "github.com/go-openapi/validate",
     "github.com/jessevdk/go-flags",
     "github.com/lib/pq",
+    "github.com/mailru/easyjson",
+    "github.com/mailru/easyjson/jlexer",
+    "github.com/mailru/easyjson/jwriter",
     "github.com/pkg/errors",
     "github.com/valyala/fasthttp",
     "golang.org/x/net/netutil",

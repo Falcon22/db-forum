@@ -62,15 +62,46 @@ CREATE TABLE voice
   vote       INTEGER DEFAULT 0 NOT NULL,
   prev_vote  INTEGER                  DEFAULT 0,
   thread_id  INTEGER                  DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  UNIQUE (nickname, vote, thread_id)
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS user_nickname_uindex
   ON users (nickname);
+
+CREATE INDEX IF NOT EXISTS user_id_index
+  ON users (id);
 
 CREATE UNIQUE INDEX IF NOT EXISTS user_email_uindex
   ON users (email);
 
 CREATE UNIQUE INDEX IF NOT EXISTS forum_slug_uindex
   ON forum (slug);
+
+CREATE INDEX IF NOT EXISTS index_post_root
+  ON post (root);
+
+CREATE INDEX IF NOT EXISTS idx_threads_slug_id
+  ON thread (slug, id);
+
+CREATE INDEX IF NOT EXISTS idx_threads_forumSlug_createdAt
+  ON thread (forum, created);
+
+CREATE INDEX IF NOT EXISTS index_thread_
+  ON thread (author, created, forum, message, title, slug, id, votes);
+
+CREATE INDEX IF NOT EXISTS indx_user
+  ON users (nickname, email, about, fullname);
+
+CREATE INDEX IF NOT EXISTS index_on_forum
+  ON forum ( slug, title, author, posts, threads);
+
+CREATE INDEX IF NOT EXISTS index_post_for_parent_tree
+  ON post (thread, parent, path);
+
+CREATE INDEX IF NOT EXISTS index_post_for_parent_tree_with_sin
+  ON post (thread, parent, root);
+
+CREATE INDEX IF NOT EXISTS index_post_for_parent_tree_without_sin
+  ON post (thread, parent, id);
 

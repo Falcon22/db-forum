@@ -11,25 +11,35 @@ var createUser = `INSERT INTO users (nickname, fullname, about, email) VALUES ($
 
 func CreateUser(user *models.User) (*[]models.User, error) {
 	var users []models.User
+	tx, err := db.pg.Begin()
+	if err != nil {
+		return nil, errors.Wrap(err, "can't prepare tx")
+	}
 	res, err := db.CreateUserStmt.Exec(user.Nickname, user.Fullname, user.About, user.Email)
 	if err != nil {
+		tx.Rollback()
 		return nil, errors.Wrap(err, "can't insert into users")
 	}
 	ra, err := res.RowsAffected()
 	if err != nil {
+		tx.Rollback()
 		return nil, errors.Wrap(err, "can't get affected rows")
 	}
 	if ra == 0 {
 		usr, err := GetUser(user.Nickname, user.Email)
 		if err != nil {
 			if err == ErrNotFound {
+				tx.Rollback()
 				return nil, errors.New("can't insert into db")
 			}
+			tx.Rollback()
 			return nil, errors.Wrap(err, "can't get from users")
 		}
+		tx.Rollback()
 		return usr, ErrDuplicate
 	}
 	users = append(users, *user)
+	tx.Commit()
 	return &users, nil
 }
 

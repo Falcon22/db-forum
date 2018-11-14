@@ -129,7 +129,7 @@ func UpdatePost(ctx *fasthttp.RequestCtx) {
 	}
 	var post models.Post
 	body := ctx.PostBody()
-	if err := json.Unmarshal(body, &post); err != nil {
+	if err := post.UnmarshalJSON(body); err != nil {
 		WriteResponse(ctx, http.StatusBadRequest, models.Error{err.Error()})
 		return
 	}

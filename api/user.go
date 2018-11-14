@@ -3,7 +3,6 @@ package api
 import (
 	"db-forum/database"
 	"db-forum/models"
-	"encoding/json"
 	"log"
 	"net/http"
 
@@ -12,8 +11,7 @@ import (
 
 func CreateUser(ctx *fasthttp.RequestCtx) {
 	var user models.User
-	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
-		log.Println(err.Error())
+	if err := user.UnmarshalJSON(ctx.PostBody()); err != nil {
 		WriteResponse(ctx, http.StatusBadRequest, models.Error{err.Error()})
 		return
 	}
@@ -47,7 +45,7 @@ func GetUser(ctx *fasthttp.RequestCtx) {
 
 func UpdateUser(ctx *fasthttp.RequestCtx) {
 	var user models.User
-	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
+	if err := user.UnmarshalJSON(ctx.PostBody()); err != nil {
 		log.Println(err.Error())
 		WriteResponse(ctx, http.StatusBadRequest, models.Error{err.Error()})
 		return
