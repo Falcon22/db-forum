@@ -90,7 +90,6 @@ func initStmts() error {
 	prepare[createPost] = &db.CreatePostStmt
 	prepare[getPostByID] = &db.GetPostByIDStmt
 
-	prepare[getPrevVote] = &db.GetPrevVoteThreadStmt
 	prepare[updateVoteThread] = &db.UpdateVoteThreadStmt
 	prepare[createVoteThread] = &db.CreatVoteThreadStmt
 	for query, key := range prepare {
