@@ -93,7 +93,6 @@ func GetThread(id string, slug string) (*models.Thread, error) {
 	return &thread, nil
 }
 
-var getPrevVote = `SELECT id, nickname, vote, thread_id FROM voice WHERE nickname = $1 AND thread_id = $2 ORDER BY created_at DESC LIMIT 1;`
 var createVoteThread = `INSERT INTO voice (nickname, vote, thread_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;`
 var updateVoteByID = `UPDATE voice SET prev_vote = vote, vote = $1 WHERE thread_id = $2 AND nickname = $3 RETURNING (vote - prev_vote);`
 var updateVoteThread = `UPDATE thread SET votes = votes + $1 WHERE id = $2 RETURNING votes;`
@@ -104,7 +103,7 @@ func VoteThread(vote *models.Vote) (newVote int32, err error) {
 		return 0, errors.Wrap(err, "can't start tx")
 	}
 	var diff int32
-	if err := db.pg.QueryRow(updateVoteByID, vote.Voice, vote.Voice, vote.Nickname).Scan(&diff); err != nil {
+	if err := db.pg.QueryRow(updateVoteByID, vote.Voice, vote.ThreadId, vote.Nickname).Scan(&diff); err != nil {
 		if err != sql.ErrNoRows {
 			tx.Rollback()
 			return 0, errors.Wrap(err, "can't update voice")
