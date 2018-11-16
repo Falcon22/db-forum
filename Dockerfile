@@ -35,6 +35,8 @@ RUN /etc/init.d/postgresql start &&\
     psql -d docker -a -f ./sql/init.sql &&\
     /etc/init.d/postgresql stop
 
+RUN echo "synchronous_commit = off" >> /etc/postgresql/$PGVER/main/postgresql.conf
+
 EXPOSE 5432
 
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
