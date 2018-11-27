@@ -3,6 +3,10 @@ package database
 import (
 	"database/sql"
 	"db-forum/models"
+	"fmt"
+	"log"
+	"strconv"
+	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/lib/pq"
@@ -41,25 +45,121 @@ func CreatePosts(posts *[]models.Post, threadSlug string) (*[]models.Post, error
 		tx.Rollback()
 		return nil, err
 	}
+
+	query := `insert into post (parent, message, thread, author, forum) values `
+	queryEnd := " returning id, is_edited, created"
+	var queryValues []string
+
+	args := make([]interface{}, 0, len(*posts)*5)
+	parents := make([]string, 0, len(*posts))
+
+	if len(*posts) == 0 {
+		return &resPosts, nil
+	}
+
+	if len(*posts) < 100 {
+		for i, post := range *posts {
+			author, err := GetUserByUsername(post.Author)
+			if err != nil || author == nil {
+				return nil, ErrNotFound
+			}
+			(*posts)[i].Author = author.Nickname
+		}
+	}
+
+	if len(*posts) == 100 {
+		for _, post := range *posts {
+			if post.Parent != 0 {
+				parents = append(parents, strconv.Itoa(int(post.Parent)))
+			}
+			args = append(args, post.Parent, post.Message, thread.ID, post.Author, thread.Forum)
+		}
+	} else {
+		for _, post := range *posts {
+			if post.Parent != 0 {
+				parents = append(parents, strconv.Itoa(int(post.Parent)))
+			}
+			queryValues = append(queryValues, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", len(args)+1, len(args)+2, len(args)+3, len(args)+4, len(args)+5))
+			args = append(args, post.Parent, post.Message, thread.ID, post.Author, thread.Forum)
+		}
+	}
+
+	if len(parents) != 0 {
+		rows, err := tx.Query(fmt.Sprint(`select thread from post where id in (`, strings.Join(parents, ","), ")"))
+		hasP := false
+
+		for rows.Next() {
+			hasP = true
+
+			var tId int32
+			err = rows.Scan(&tId)
+			if err != nil {
+				log.Println(err)
+				log.Println(tId)
+			}
+
+			if tId != thread.ID {
+				return nil, ErrDuplicate
+			}
+		}
+
+		if !hasP {
+			return nil, ErrDuplicate
+		}
+
+	}
+
+	query += strings.Join(queryValues, ",") + queryEnd
+
+	if len(*posts) == 100 {
+		query = "bigInsert"
+	}
+
+	fmt.Println(query)
+	fmt.Println(queryValues)
+	rows, err := tx.Query(query, args...)
+	var par []string
+	var nopar []string
+
+	a := make(map[string]bool)
+	for i, post := range *posts {
+		if rows.Next() {
+			err = rows.Scan(&((*posts)[i].ID), &((*posts)[i].IsEdited), &((*posts)[i].Created))
+			if post.Parent != 0 {
+				par = append(par, strconv.Itoa(int(post.ID)))
+			} else {
+				nopar = append(nopar, strconv.Itoa(int(post.ID)))
+			}
+
+			a["'"+post.Author+"'"] = true
+			(*posts)[i].Forum = thread.Forum
+			(*posts)[i].Thread = thread.ID
+		}
+	}
+	rows.Close()
+
+	auth := make([]string, 0, len(a))
+	for key := range a {
+		auth = append(auth, key)
+	}
+
+	if err := rows.Err(); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+
+		log.Println("error on main query")
+		log.Println(err)
+		return nil, ErrDuplicate
+	}
+	tx.Exec(updateForumPostsCount, thread.Forum, len(*posts))
+
+	err = tx.Commit()
+	if err != nil {
+		log.Println(err)
+	}
+
 	for _, post := range *posts {
-		newPost := post
-		user, err := GetUserByUsername(post.Author)
-		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-		newPost.Author, newPost.Thread, newPost.Forum = user.Nickname, thread.ID, thread.Forum
-		if err := tx.Stmt(db.CreatePostStmt).QueryRow(post.Parent, user.Nickname, post.Message, thread.Forum, thread.ID).Scan(&newPost.ID, &newPost.Created); err != nil {
-			tx.Rollback()
-			return nil, errors.Wrap(err, "can't insert into post")
-		}
-		resPosts = append(resPosts, newPost)
-	}
-	if _, err := db.pg.Exec(updateForumPostsCount, thread.Forum, len(resPosts)); err != nil {
-		return &resPosts, errors.Wrap(err, "can't update forum")
-	}
-	tx.Commit()
-	for _, post := range resPosts {
 		var root int64
 		sqlPath := make([]sql.NullInt64, 0)
 		if post.Parent != 0 {
@@ -83,7 +183,8 @@ func CreatePosts(posts *[]models.Post, threadSlug string) (*[]models.Post, error
 			return nil, errors.Wrap(err, "can't update post path")
 		}
 	}
-	return &resPosts, nil
+
+	return posts, nil
 }
 
 var getPostByID = `SELECT id, parent, author, message, is_edited, forum, thread, created 
@@ -107,16 +208,16 @@ func GetPostsFlat(thread int32, limit string, since string, desc string) (*[]mod
 	var err error
 	if since != "" {
 		if desc == "true" {
-			getPostsFlat += " AND id < $2 ORDER BY created DESC, id DESC LIMIT $3;"
+			getPostsFlat += " AND id < $2 ORDER BY id DESC LIMIT $3;"
 		} else {
-			getPostsFlat += " AND id > $2 ORDER BY created, id ASC LIMIT $3;"
+			getPostsFlat += " AND id > $2 ORDER BY id ASC LIMIT $3;"
 		}
 		rows, err = db.pg.Query(getPostsFlat, thread, since, limit)
 	} else {
 		if desc == "true" {
-			getPostsFlat += " ORDER BY created DESC, id DESC LIMIT $2;"
+			getPostsFlat += " ORDER BY id DESC LIMIT $2;"
 		} else {
-			getPostsFlat += " ORDER BY created, id LIMIT $2;"
+			getPostsFlat += " ORDER BY id LIMIT $2;"
 		}
 		rows, err = db.pg.Query(getPostsFlat, thread, limit)
 	}
