@@ -111,12 +111,12 @@ func CreatePosts(posts *[]models.Post, threadSlug string) (*[]models.Post, error
 
 	query += strings.Join(queryValues, ",") + queryEnd
 
-	if len(*posts) == 100 {
-		query = "bigInsert"
-	}
 
-	fmt.Println(query)
-	fmt.Println(queryValues)
+
+
+
+
+
 	rows, err := tx.Query(query, args...)
 	var par []string
 	var nopar []string
