@@ -33,6 +33,7 @@ type DB struct {
 	GetPrevVoteThreadStmt *sql.Stmt
 	CreatVoteThreadStmt   *sql.Stmt
 	UpdateVoteThreadStmt  *sql.Stmt
+	BigInsert *sql.Stmt
 }
 
 var (
@@ -90,6 +91,7 @@ func initStmts() error {
 	prepare[createPost] = &db.CreatePostStmt
 	prepare[getPostByID] = &db.GetPostByIDStmt
 
+	prepare[bigInsert] = &db.BigInsert
 	prepare[updateVoteThread] = &db.UpdateVoteThreadStmt
 	prepare[createVoteThread] = &db.CreatVoteThreadStmt
 	for query, key := range prepare {

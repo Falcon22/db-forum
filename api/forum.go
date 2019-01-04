@@ -39,7 +39,6 @@ func CreateForum(ctx *fasthttp.RequestCtx) {
 		WriteResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
-	log.Println(newForum)
 	WriteResponse(ctx, http.StatusCreated, newForum)
 }
 
