@@ -113,7 +113,7 @@ func CreatePosts(posts *[]models.Post, threadSlug string) (*[]models.Post, error
 	}
 
 	query += strings.Join(queryValues, ",") + queryEnd
-
+	
 	var rows *sql.Rows
 	if len(*posts) == 100 {
 		rows, err = tx.Stmt(db.BigInsert).Query(args...)
